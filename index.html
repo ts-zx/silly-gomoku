@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>【沙雕五子棋·不讲武德版】</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
+
+body {
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'ZCOOL KuaiLe', 'Comic Sans MS', cursive, sans-serif;
+  overflow-x: hidden;
+}
+
+.confetti-container {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+.confetti {
+  position: absolute;
+  font-size: 24px;
+  animation: fall linear infinite;
+  opacity: 0.5;
+}
+@keyframes fall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity:0.8; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity:0; }
+}
+
+.game-wrapper {
+  position: relative;
+  z-index: 1;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px);
+  border-radius: 48px;
+  padding: 30px 40px 40px;
+  border: 2px solid rgba(255,215,0,0.3);
+  box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+  max-width: 760px;
+  width: fit-content;
+  margin: 20px;
+}
+
+.title {
+  text-align: center;
+  color: #ffd700;
+  font-size: 32px;
+  text-shadow: 0 0 20px rgba(255,215,0,0.4), 2px 2px 0 #b8860b;
+  margin-bottom: 8px;
+  letter-spacing: 4px;
+}
+.subtitle {
+  text-align: center;
+  color: #aaa;
+  font-size: 14px;
+  margin-bottom: 16px;
+  letter-spacing: 2px;
+}
+.subtitle span {
+  background: rgba(255,215,0,0.15);
+  padding: 2px 10px;
+  border-radius: 20px;
+  color: #ffd700;
+}
+
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  gap: 10px;
+}
+.player-panel {
+  flex:1;
+  padding: 10px 16px;
+  border-radius: 16px;
+  text-align: center;
+  transition: all .3s;
+  border: 2px solid transparent;
+}
+.player-panel.active-black {
+  background: rgba(0,0,0,0.4);
+  border-color: #888;
+  box-shadow: 0 0 16px rgba(255,255,255,0.1);
+}
+.player-panel.active-white {
+  background: rgba(255,255,255,0.1);
+  border-color: #ddd;
+  box-shadow: 0 0 16px rgba(255,255,255,0.15);
+}
+.player-panel .name { font-size: 18px; font-weight: bold; }
+.player-panel .name.black { color: #eee; }
+.player-panel .name.white { color: #fff; }
+.player-panel .skills-left {
+  font-size: 12px;
+  color: #ffd700;
+  margin-top: 2px;
+}
+.turn-badge {
+  font-size: 13px;
+  background: #ffd700;
+  color: #000;
+  padding: 2px 12px;
+  border-radius: 30px;
+  font-weight: bold;
+  display: none;
+}
+.player-panel.active-black .turn-badge,
+.player-panel.active-white .turn-badge {
+  display: inline-block;
+  animation: pulse 1s infinite;
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.turn-indicator {
+  text-align: center;
+  color: #ffd700;
+  font-size: 16px;
+  margin-bottom: 12px;
+  min-height: 28px;
+}
+.turn-indicator .highlight {
+  background: rgba(255,215,0,0.2);
+  padding: 2px 14px;
+  border-radius: 30px;
+}
+
+.board-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+canvas#board {
+  border-radius: 16px;
+  background: #d4a853;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.5);
+  cursor: pointer;
+  width: 480px;
+  height: 480px;
+  image-rendering: pixelated;
+}
+
+.skills-bar {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.skill-btn {
+  padding: 8px 14px;
+  border: 2px solid rgba(255,215,0,0.3);
+  border-radius: 30px;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .2s;
+  position: relative;
+  white-space: nowrap;
+}
+.skill-btn:hover:not(:disabled) {
+  background: rgba(255,215,0,0.2);
+  border-color: #ffd700;
+  transform: translateY(-2px);
+}
+.skill-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+.skill-btn .badge {
+  display: inline-block;
+  background: #ffd700;
+  color: #000;
+  border-radius: 20px;
+  padding: 0 8px;
+  font-size: 11px;
+  margin-left: 4px;
+  font-weight: bold;
+}
+.skill-btn.selected {
+  background: rgba(255,215,0,0.25);
+  border-color: #ffd700;
+  box-shadow: 0 0 20px rgba(255,215,0,0.3);
+}
+
+.msg-area {
+  text-align: center;
+  min-height: 40px;
+  padding: 8px;
+  font-size: 16px;
+  color: #ffd700;
+}
+.msg-area .big-text {
+  font-size: 28px;
+  animation: popIn .4s cubic-bezier(0.68,-0.55,0.27,1.55);
+  display: inline-block;
+}
+@keyframes popIn {
+  0% { transform: scale(0); opacity:0; }
+  100% { transform: scale(1); opacity:1; }
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.ctrl-btn {
+  padding: 8px 24px;
+  border: none;
+  border-radius: 30px;
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all .2s;
+  font-weight: bold;
+}
+.btn-restart {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: #fff;
+}
+.btn-restart:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(238,90,36,0.4);
+}
+.btn-undo {
+  background: rgba(255,255,255,0.1);
+  color: #ccc;
+  border: 1px solid #555;
+}
+.btn-undo:hover { background: rgba(255,255,255,0.2); }
+
+.skill-tooltip {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,215,0,0.5);
+  max-width: 360px;
+  text-align: center;
+  font-size: 14px;
+  z-index: 100;
+  animation: floatUp .3s ease;
+  pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+@keyframes floatUp {
+  0% { opacity:0; transform: translateX(-50%) translateY(-20px); }
+  100% { opacity:1; transform: translateX(-50%) translateY(0); }
+}
+
+@media (max-width: 600px) {
+  .game-wrapper { padding: 16px; border-radius: 24px; margin: 10px; }
+  canvas#board { width: 340px; height: 340px; }
+  .title { font-size: 22px; }
+  .skill-btn { font-size: 11px; padding: 6px 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="confetti-container" id="confettiBox"></div>
+
+<div class="game-wrapper">
+  <div class="title">🎮 沙雕五子棋</div>
+  <div class="subtitle">—— <span>不讲武德·来骗来偷袭</span> ——</div>
+
+  <div class="status-bar">
+    <div class="player-panel active-black" id="panelBlack">
+      <div class="name black">⚫ 黑子·老六</div>
+      <div class="skills-left">💫 技能剩余: <span id="blackSkills">3</span></div>
+      <div class="turn-badge">🎯 回合</div>
+    </div>
+    <div class="player-panel active-white" id="panelWhite">
+      <div class="name white">⚪ 白子·偷袭大师</div>
+      <div class="skills-left">💫 技能剩余: <span id="whiteSkills">3</span></div>
+      <div class="turn-badge">🎯 回合</div>
+    </div>
+  </div>
+
+  <div class="turn-indicator" id="turnIndicator">
+    <span class="highlight">⚫ 黑子·老六 的回合，请落子或使用技能</span>
+  </div>
+
+  <div class="skills-bar" id="skillsBar"></div>
+
+  <div class="board-container">
+    <canvas id="board" width="480" height="480"></canvas>
+  </div>
+
+  <div class="msg-area" id="msgArea">🎲 点击棋盘落子，技能栏选技能后点击目标</div>
+
+  <div class="controls">
+    <button class="ctrl-btn btn-undo" id="undoBtn">↩ 悔棋</button>
+    <button class="ctrl-btn btn-restart" id="restartBtn">🔄 重新开局</button>
+  </div>
+</div>
+
+<div id="tooltip" class="skill-tooltip" style="display:none;"></div>
+
+<script>
+// ======================== 游戏核心 ========================
+const SIZE = 15;
+const CELL = 32;
+const PADDING = 16;
+const PIECE_R = 13;
+
+let board = Array(SIZE).fill().map(()=>Array(SIZE).fill(null));
+let currentPlayer = 1;
+let gameOver = false;
+let moveHistory = [];
+let skillLog = [];
+let turnCount = 0;
+
+let selectedSkill = null;
+let skillTargetPending = false;
+let blockedCells = [];
+
+// 技能定义
+const SKILLS = [
+  { id: 'curse',   name: '🧙 画个圈圈诅咒你',  desc: '选对手一颗棋子，封印3回合（不能参与五连判定）', target: 'opponent_piece', cooldown: 0 },
+  { id: 'erase',   name: '🧽 我擦！我擦！',       desc: '擦掉对手一颗已下的棋子', target: 'opponent_piece', cooldown: 1 },
+  { id: 'steal',   name: '🏃♂️ 偷梁换柱',         desc: '把自己的棋子瞬移到另一个空格', target: 'own_piece', cooldown: 1, needsSecond: 'empty_cell' },
+  { id: 'double',  name: '⚡ 闪现连击',           desc: '本回合连下两子，跳对手一回合', target: 'none', cooldown: 2 },
+  { id: 'swap',    name: '🔄 你这棋我收了',       desc: '选对手一颗棋子和自己一颗互换', target: 'opponent_piece', cooldown: 2, needsSecond: 'own_piece' },
+  { id: 'force',   name: '💢 逼我就范',           desc: '指定对手下一步必须落子的位置', target: 'empty_cell', cooldown: 2 },
+  { id: 'confuse', name: '🌀 我眼花缭乱',         desc: '棋盘所有棋子随机洗牌！自损八百', target: 'none', cooldown: 3 },
+];
+
+const MAX_SKILLS = 3;
+let playerSkills = { 1: MAX_SKILLS, 2: MAX_SKILLS };
+let cooldowns = { 1: {}, 2: {} };
+let doubleMovePending = { 1: false, 2: false };
+let forceMoveTarget = null;
+let lastMove = null;
+
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+
+// ======================== 弹幕 ========================
+const EMOJIS = ['😂','🤣','💀','🔥','😈','👻','🎉','🤡','🥴','🤪','💩','👀','✨','💥','🫣','🤌'];
+function createConfetti() {
+  const box = document.getElementById('confettiBox');
+  for (let i = 0; i < 25; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.textContent = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+    el.style.left = Math.random()*100 + '%';
+    el.style.fontSize = (18+Math.random()*20)+'px';
+    el.style.animationDuration = (8+Math.random()*12)+'s';
+    el.style.animationDelay = (Math.random()*15)+'s';
+    box.appendChild(el);
+  }
+}
+createConfetti();
+
+// ======================== 绘制棋盘 ========================
+function drawBoard() {
+  ctx.clearRect(0,0,480,480);
+  const grad = ctx.createLinearGradient(0,0,480,480);
+  grad.addColorStop(0,'#d4a853');
+  grad.addColorStop(1,'#c49a3c');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,480,480);
+
+  ctx.strokeStyle = '#8b6914';
+  ctx.lineWidth = 1;
+  for (let i=0; i<SIZE; i++) {
+    const x = PADDING + i*CELL;
+    const y = PADDING + i*CELL;
+    ctx.beginPath();
+    ctx.moveTo(PADDING, y);
+    ctx.lineTo(PADDING+(SIZE-1)*CELL, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, PADDING);
+    ctx.lineTo(x, PADDING+(SIZE-1)*CELL);
+    ctx.stroke();
+  }
+
+  const stars = [[3,3],[3,11],[11,3],[11,11],[7,7]];
+  ctx.fillStyle = '#8b6914';
+  for (const [r,c] of stars) {
+    ctx.beginPath();
+    ctx.arc(PADDING+c*CELL, PADDING+r*CELL, 4, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  for (let r=0; r<SIZE; r++) {
+    for (let c=0; c<SIZE; c++) {
+      if (board[r][c] === null) continue;
+      const x = PADDING + c*CELL;
+      const y = PADDING + r*CELL;
+      const isBlocked = blockedCells.some(b => b.r===r && b.c===c);
+
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+
+      const rad = ctx.createRadialGradient(x-4,y-4,2,x,y,PIECE_R);
+      if (board[r][c] === 1) {
+        rad.addColorStop(0,'#555');
+        rad.addColorStop(0.7,'#111');
+        rad.addColorStop(1,'#000');
+      } else {
+        rad.addColorStop(0,'#fff');
+        rad.addColorStop(0.7,'#eee');
+        rad.addColorStop(1,'#ccc');
+      }
+      ctx.beginPath();
+      ctx.arc(x, y, PIECE_R, 0, Math.PI*2);
+      ctx.fillStyle = rad;
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+
+      if (isBlocked) {
+        ctx.strokeStyle = '#ff0044';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(x, y, PIECE_R+5, 0, Math.PI*2);
+        ctx.stroke();
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillStyle = '#ff0044';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('⛔', x, y-1);
+      }
+
+      if (lastMove && lastMove.r===r && lastMove.c===c && !isBlocked) {
+        ctx.fillStyle = board[r][c]===1?'#fff':'#e74c3c';
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI*2);
+        ctx.fill();
+      }
+    }
+  }
+}
+
+// ======================== 胜负检测 ========================
+function checkWin(r, c, player) {
+  // 被诅咒的棋子不能作为五连的起点
+  if (blockedCells.some(b => b.r===r && b.c===c)) return false;
+  const dirs = [[1,0],[0,1],[1,1],[1,-1]];
+  for (const [dr,dc] of dirs) {
+    let count = 1;
+    // 正方向
+    for (let d=1; d<5; d++) {
+      const nr = r+dr*d, nc = c+dc*d;
+      if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) break;
+      if (board[nr][nc] !== player) break;
+      if (blockedCells.some(b => b.r===nr && b.c===nc)) break;
+      count++;
+    }
+    // 反方向
+    for (let d=1; d<5; d++) {
+      const nr = r-dr*d, nc = c-dc*d;
+      if (nr<0||nr>=SIZE||nc<0||nc>=SIZE) break;
+      if (board[nr][nc] !== player) break;
+      if (blockedCells.some(b => b.r===nr && b.c===nc)) break;
+      count++;
+    }
+    if (count >= 5) return true;
+  }
+  return false;
+}
+
+function isDraw() {
+  for (let r=0; r<SIZE; r++)
+    for (let c=0; c<SIZE; c++)
+      if (board[r][c] === null) return false;
+  return true;
+}
+
+// ======================== 沙雕台词 ========================
+const WIN_MSGS = [
+  '🎉 赢啦！就这？就这？就这？',
+  '💀 对手直接裂开，这谁顶得住啊',
+  '🔥 不讲武德！但是赢了嘿嘿嘿',
+  '😂 偷袭成功！完美！',
+  '🤡 对手已哭晕在厕所',
+  '👑 沙雕棋王驾到，通通闪开！',
+  '💪 老六本六，从未失手',
+  '🫣 这也能赢？我自己都没想到',
+  '🤌 常规操作，坐下坐下',
+  '🎊 赢了！今晚加鸡腿！',
+  '🤪 对手：我受不了了！这棋有毒！',
+  '✨ 完美收官，深藏功与名',
+  '😎 就这水平？再来五盘！',
+  '🔥 节目效果拉满！',
+];
+const SKILL_MSGS = [
+  '技能发动！对手直呼好家伙！',
+  '不讲武德！来骗！来偷袭！',
+  '好活！全场最佳！',
+  '这操作，我看了都摇头',
+  '技能命中！效果拔群！',
+  '对手：？？？？？？',
+  '节目效果拉满！',
+  '这一手，教科书级别的不要脸',
+  '骚操作来了！',
+  '不愧是你，老六中的老六！',
+];
+
+function randomMsg(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+function showBigMsg(msg) {
+  const el = document.getElementById('msgArea');
+  el.innerHTML = `<span class="big-text">${msg}</span>`;
+  setTimeout(() => {
+    if (el.querySelector('.big-text')?.textContent === msg) {
+      el.innerHTML = getTurnMsg();
+    }
+  }, 2500);
+}
+
+function getTurnMsg() {
+  if (gameOver) return '🏁 游戏结束，点击"重新开局"再来一局';
+  const name = currentPlayer===1 ? '⚫ 黑子·老六' : '⚪ 白子·偷袭大师';
+  const msgs = [
+    `${name} 请开始你的表演`,
+    `${name} 到你了，搞快点`,
+    `${name} 秀起来！`,
+    `${name} 让我看看你有什么骚操作`,
+    `${name} 请！不要手下留情`,
+    `${name} 整活时间！`,
+  ];
+  return msgs[Math.floor(Math.random()*msgs.length)];
+}
+
+function setMsg(msg) {
+  document.getElementById('msgArea').textContent = msg;
+}
+
+function showMsg(msg) {
+  document.getElementById('msgArea').textContent = msg;
+  setTimeout(() => {
+    if (!gameOver) document.getElementById('msgArea').textContent = getTurnMsg();
+  }, 3000);
+}
+
+// ======================== 回合管理 ========================
+function switchTurn() {
+  blockedCells = blockedCells
+    .map(b => ({...b, remain: b.remain-1}))
+    .filter(b => b.remain>0);
+
+  for (const p of [1,2]) {
+    for (const sid of Object.keys(cooldowns[p])) {
+      cooldowns[p][sid]--;
+      if (cooldowns[p][sid] <= 0) delete cooldowns[p][sid];
+    }
+  }
+
+  if (doubleMovePending[currentPlayer]) {
+    doubleMovePending[currentPlayer] = false;
+  } else {
+    currentPlayer = currentPlayer === 1 ? 2 : 1;
+  }
+  turnCount++;
+  selectedSkill = null;
+  skillTargetPending = false;
+  updateUI();
+}
+
+function endGame(winner) {
+  gameOver = true;
+  const el = document.getElementById('msgArea');
+  if (winner === 1) el.innerHTML = `<span class="big-text">⚫ 黑子·老六 赢了！${randomMsg(WIN_MSGS)}</span>`;
+  else el.innerHTML = `<span class="big-text">⚪ 白子·偷袭大师 赢了！${randomMsg(WIN_MSGS)}</span>`;
+  updateUI();
+}
+
+// ======================== 落子 ========================
+function placePiece(r, c) {
+  if (gameOver) return false;
+  if (board[r][c] !== null) return false;
+
+  const opponent = currentPlayer === 1 ? 2 : 1;
+  if (forceMoveTarget && currentPlayer === opponent) {
+    // 不应该发生，因为force只让对手被强制
+  }
+  if (forceMoveTarget && currentPlayer === (currentPlayer===1?2:1)) {
+    // 这里逻辑不对，改一下
+  }
+  // 正确逻辑：如果当前玩家是被force的对象
+  if (forceMoveTarget) {
+    if (forceMoveTarget.r !== r || forceMoveTarget.c !== c) {
+      showMsg('💢 对方用了"逼我就范"，你必须下在指定位置！');
+      return false;
+    }
+    forceMoveTarget = null;
+  }
+
+  board[r][c] = currentPlayer;
+  lastMove = {r, c};
+  moveHistory.push({r, c, player: currentPlayer, type: 'move'});
+
+  if (checkWin(r, c, currentPlayer)) {
+    drawBoard();
+    endGame(currentPlayer);
+    updateUI();
+    return true;
+  }
+  if (isDraw()) {
+    gameOver = true;
+    document.getElementById('msgArea').innerHTML = `<span class="big-text">🤝 平局！你俩半斤八两</span>`;
+    drawBoard();
+    updateUI();
+    return true;
+  }
+
+  drawBoard();
+  switchTurn();
+  return true;
+}
+
+// ======================== 技能执行 ========================
+function executeSkill(skillId, targets) {
+  const player = currentPlayer;
+  if (playerSkills[player] <= 0) { showMsg('💫 技能次数用完了！'); return false; }
+  if (cooldowns[player][skillId]) { showMsg(`⏳ 冷却中，还剩${cooldowns[player][skillId]}回合`); return false; }
+
+  const skill = SKILLS.find(s => s.id === skillId);
+  if (!skill) return false;
+
+  let success = false;
+  let desc = '';
+
+  switch (skillId) {
+    case 'curse': {
+      const {r,c} = targets[0];
+      if (board[r][c] !== (player===1?2:1)) { showMsg('请选择对手的棋子！'); return false; }
+      if (blockedCells.some(b => b.r===r && b.c===c)) { showMsg('这个棋子已经被诅咒了！'); return false; }
+      blockedCells.push({r, c, player: board[r][c], remain: 3});
+      success = true;
+      desc = `🧙 画个圈圈诅咒你！(${r+1},${c+1}) 被封印3回合！`;
+      break;
+    }
+    case 'erase': {
+      const {r,c} = targets[0];
+      if (board[r][c] !== (player===1?2:1)) { showMsg('请选择对手的棋子！'); return false; }
+      board[r][c] = null;
+      // 同时清理blocked记录
+      blockedCells = blockedCells.filter(b => !(b.r===r && b.c===c));
+      const idx = moveHistory.findLastIndex(m => m.r===r && m.c===c);
+      if (idx>=0) moveHistory.splice(idx,1);
+      success = true;
+      desc = `🧽 我擦！我擦！对手的棋子被擦掉了！`;
+      break;
+    }
+    case 'steal': {
+      const from = targets[0], to = targets[1];
+      if (board[from.r][from.c] !== player) { showMsg('请选择自己的棋子！'); return false; }
+      if (board[to.r][to.c] !== null) { showMsg('目标必须是空格！'); return false; }
+      // 如果被移动的棋子是被诅咒的，清除诅咒
+      blockedCells = blockedCells.filter(b => !(b.r===from.r && b.c===from.c));
+      board[to.r][to.c] = player;
+      board[from.r][from.c] = null;
+      lastMove = to;
+      moveHistory.push({r:to.r, c:to.c, player, type:'move'});
+      success = true;
+      desc = `🏃♂️ 偷梁换柱！从 (${from.r+1},${from.c+1}) 瞬移到 (${to.r+1},${to.c+1})！`;
+      break;
+    }
+    case 'double': {
+      doubleMovePending[player] = true;
+      success = true;
+      desc = `⚡ 闪现连击！你可以连下两子！`;
+      break;
+    }
+    case 'swap': {
+      const opp = targets[0], own = targets[1];
+      if (board[opp.r][opp.c] !== (player===1?2:1)) { showMsg('第一个请选对手棋子！'); return false; }
+      if (board[own.r][own.c] !== player) { showMsg('第二个请选自己的棋子！'); return false; }
+      // 清理两个位置的诅咒状态
+      blockedCells = blockedCells.filter(b => !((b.r===opp.r&&b.c===opp.c)||(b.r===own.r&&b.c===own.c)));
+      board[own.r][own.c] = player===1?2:1;
+      board[opp.r][opp.c] = player;
+      lastMove = opp;
+      moveHistory.push({r:opp.r, c:opp.c, player, type:'move'});
+      success = true;
+      desc = `🔄 你这棋我收了！互换位置！`;
+      break;
+    }
+    case 'force': {
+      const {r,c} = targets[0];
+      if (board[r][c] !== null) { showMsg('必须选空格！'); return false; }
+      forceMoveTarget = {r, c};
+      success = true;
+      desc = `💢 逼我就范！对手必须下在 (${r+1},${c+1})！`;
+      break;
+    }
+    case 'confuse': {
+      const pieces = [], positions = [];
+      for (let rr=0; rr<SIZE; rr++)
+        for (let cc=0; cc<SIZE; cc++)
+          if (board[rr][cc] !== null) {
+            pieces.push(board[rr][cc]);
+            positions.push({r:rr, c:cc});
+          }
+      if (pieces.length < 2) { showMsg('棋子太少，洗了个寂寞'); return false; }
+      for (let i=pieces.length-1; i>0; i--) {
+        const j = Math.floor(Math.random()*(i+1));
+        [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
+      }
+      for (let i=0; i<positions.length; i++)
+        board[positions[i].r][positions[i].c] = pieces[i];
+      // 洗牌后清空所有诅咒（位置乱了）
+      blockedCells = [];
+      success = true;
+      desc = `🌀 我眼花缭乱！全盘洗牌！现在谁还分得清谁是谁！`;
+      break;
+    }
+  }
+
+  if (success) {
+    playerSkills[player]--;
+    cooldowns[player][skillId] = skill.cooldown;
+    skillLog.push({player, skillId, turn: turnCount});
+    showBigMsg(randomMsg(SKILL_MSGS));
+    setMsg(desc);
+    drawBoard();
+    updateUI();
+
+    if (skillId === 'confuse') {
+      for (let rr=0; rr<SIZE; rr++)
+        for (let cc=0; cc<SIZE; cc++)
+          if (board[rr][cc] !== null && checkWin(rr, cc, board[rr][cc])) {
+            endGame(board[rr][cc]);
+            return true;
+          }
+    }
+    if (skillId === 'steal' || skillId === 'swap') {
+      if (checkWin(lastMove.r, lastMove.c, player)) {
+        endGame(player);
+        return true;
+      }
+    }
+
+    if (skillId !== 'double') {
+      switchTurn();
+    } else {
+      updateUI();
+    }
+    return true;
+  }
+  return false;
+}
+
+// ======================== UI 更新 ========================
+function updateUI() {
+  document.getElementById('blackSkills').textContent = playerSkills[1];
+  document.getElementById('whiteSkills').textContent = playerSkills[2];
+  const pB = document.getElementById('panelBlack');
+  const pW = document.getElementById('panelWhite');
+  pB.classList.toggle('active-black', currentPlayer===1);
+  pW.classList.toggle('active-white', currentPlayer===2);
+  document.getElementById('turnIndicator').innerHTML =
+    gameOver ? '🏁 游戏结束' :
+    `<span class="highlight">${currentPlayer===1?'⚫ 黑子·老六':'⚪ 白子·偷袭大师'} 的回合</span>`;
+  renderSkills();
+}
+
+function renderSkills() {
+  const bar = document.getElementById('skillsBar');
+  bar.innerHTML = '';
+  const player = currentPlayer;
+  SKILLS.forEach(skill => {
+    const btn = document.createElement('button');
+    btn.className = 'skill-btn' + (selectedSkill===skill.id?' selected':'');
+    const cd = cooldowns[player]?.[skill.id];
+    const noSkill = playerSkills[player] <= 0;
+    if (gameOver || noSkill || cd) btn.disabled = true;
+    let badgeText = '';
+    if (cd) badgeText = `⏳${cd}回合`;
+    else if (noSkill) badgeText = '耗尽';
+    else badgeText = `✔️可用`;
+    btn.innerHTML = `${skill.name} <span class="badge">${badgeText}</span>`;
+    btn.title = skill.desc;
+    btn.onmouseenter = () => {
+      const tip = document.getElementById('tooltip');
+      tip.textContent = skill.desc;
+      tip.style.display = 'block';
+      if (tip._hideTimer) clearTimeout(tip._hideTimer);
+      tip._hideTimer = setTimeout(() => {
+        tip.style.display = 'none';
+      }, 2500);
+    };
+    btn.onmouseleave = () => {
+      const tip = document.getElementById('tooltip');
+      tip.style.display = 'none';
+      if (tip._hideTimer) clearTimeout(tip._hideTimer);
+    };
+    btn.onclick = () => {
+      if (gameOver || playerSkills[player]<=0 || cooldowns[player]?.[skill.id]) return;
+      if (skill.target === 'none') {
+        executeSkill(skill.id, []);
+      } else {
+        if (selectedSkill === skill.id) {
+          selectedSkill = null;
+          skillTargetPending = false;
+        } else {
+          selectedSkill = skill.id;
+          skillTargetPending = true;
+          showMsg(`🎯 请在棋盘选目标 (${skill.name})，右键取消`);
+        }
+        renderSkills();
+      }
+    };
+    bar.appendChild(btn);
+  });
+}
+
+// ======================== 棋盘点击 ========================
+canvas.addEventListener('click', (e) => {
+  if (gameOver) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top) * scaleY;
+  const c = Math.round((mx - PADDING) / CELL);
+  const r = Math.round((my - PADDING) / CELL);
+  if (r<0||r>=SIZE||c<0||c>=SIZE) return;
+
+  if (skillTargetPending && selectedSkill) {
+    const skill = SKILLS.find(s => s.id === selectedSkill);
+    if (!skill) return;
+
+    // 需要选多个目标的技能：先检查是否已有_firstTarget
+    if (skill.needsSecond && skill._firstTarget) {
+      const first = skill._firstTarget;
+      delete skill._firstTarget;
+      if (skill.needsSecond === 'empty_cell') {
+        if (board[r][c] !== null) { showMsg('第二个目标必须是空格！'); return; }
+        executeSkill(selectedSkill, [first, {r,c}]);
+      } else if (skill.needsSecond === 'own_piece') {
+        if (board[r][c] !== currentPlayer) { showMsg('请选择自己的棋子！'); return; }
+        executeSkill(selectedSkill, [first, {r,c}]);
+      }
+      selectedSkill = null;
+      skillTargetPending = false;
+      updateUI();
+      return;
+    }
+
+    // 选择第一个目标
+    if (skill.target === 'opponent_piece' || skill.target === 'own_piece') {
+      const expected = skill.target === 'opponent_piece' ? (currentPlayer===1?2:1) : currentPlayer;
+      if (board[r][c] !== expected) {
+        showMsg(skill.target==='opponent_piece'?'请选择对手的棋子！':'请选择自己的棋子！');
+        return;
+      }
+      if (skill.needsSecond) {
+        skill._firstTarget = {r,c};
+        const hint = skill.needsSecond === 'empty_cell' ? '空格' : '自己的棋子';
+        showMsg(`✅ 已选第一个目标，再选${hint}`);
+        return;
+      }
+      executeSkill(selectedSkill, [{r,c}]);
+      selectedSkill = null;
+      skillTargetPending = false;
+      updateUI();
+      return;
+    }
+
+    if (skill.target === 'empty_cell') {
+      if (board[r][c] !== null) { showMsg('请选择空格！'); return; }
+      executeSkill(selectedSkill, [{r,c}]);
+      selectedSkill = null;
+      skillTargetPending = false;
+      updateUI();
+      return;
+    }
+  }
+
+  // 普通落子
+  if (board[r][c] !== null) { showMsg('这里已经有棋子了！'); return; }
+
+  // force检测：谁被强制了
+  if (forceMoveTarget) {
+    const opponent = currentPlayer === 1 ? 2 : 1;
+    // 查找force技能的施放者（通过检查forceMoveTarget是否有值，然后switchTurn后当前player是被强制方的逻辑）
+    // forceMoveTarget的设置方是上一回合的player
+    // 如果forceMoveTarget有值，当前player就是被强制方
+    if (forceMoveTarget.r !== r || forceMoveTarget.c !== c) {
+      showMsg(`💢 对方用了"逼我就范"，你必须下在 (${forceMoveTarget.r+1},${forceMoveTarget.c+1})！`);
+      return;
+    }
+    forceMoveTarget = null;
+  }
+
+  placePiece(r, c);
+});
+
+// 右键取消技能
+canvas.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  if (skillTargetPending || selectedSkill) {
+    SKILLS.forEach(s => delete s._firstTarget);
+    selectedSkill = null;
+    skillTargetPending = false;
+    updateUI();
+    showMsg('已取消技能选择');
+  }
+});
+
+// ======================== 悔棋 ========================
+document.getElementById('undoBtn').onclick = () => {
+  if (gameOver) return;
+  if (moveHistory.length === 0) { showMsg('没有可以悔的棋🤷'); return; }
+  for (let i=0; i<2 && moveHistory.length>0; i++) {
+    const last = moveHistory.pop();
+    board[last.r][last.c] = null;
+    blockedCells = blockedCells.filter(b => !(b.r===last.r && b.c===last.c));
+  }
+  currentPlayer = currentPlayer === 1 ? 2 : 1;
+  lastMove = moveHistory.length>0 ? moveHistory[moveHistory.length-1] : null;
+  forceMoveTarget = null;
+  drawBoard();
+  updateUI();
+  showBigMsg('↩ 悔棋成功！时光倒流！');
+};
+
+// ======================== 重新开局 ========================
+document.getElementById('restartBtn').onclick = () => {
+  board = Array(SIZE).fill().map(()=>Array(SIZE).fill(null));
+  currentPlayer = 1;
+  gameOver = false;
+  moveHistory = [];
+  skillLog = [];
+  turnCount = 0;
+  playerSkills = { 1: MAX_SKILLS, 2: MAX_SKILLS };
+  cooldowns = { 1: {}, 2: {} };
+  doubleMovePending = { 1: false, 2: false };
+  forceMoveTarget = null;
+  blockedCells = [];
+  selectedSkill = null;
+  skillTargetPending = false;
+  lastMove = null;
+  SKILLS.forEach(s => delete s._firstTarget);
+  drawBoard();
+  updateUI();
+  document.getElementById('msgArea').innerHTML = '<span class="big-text">🔄 新的一局！开始整活！</span>';
+  setTimeout(() => {
+    document.getElementById('msgArea').textContent = getTurnMsg();
+  }, 2000);
+};
+
+// ======================== 初始化 ========================
+drawBoard();
+updateUI();
+</script>
+</body>
+</html>
