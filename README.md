@@ -2,57 +2,61 @@
   <img src="https://img.icons8.com/emoji/96/000000/go-game-emoji.png" width="80">
 </p>
 
-<h1 align="center">🎮 Silly Gomoku</h1>
+<h1 align="center">🎮 沙雕五子棋</h1>
 <p align="center">
-  <b>The Unfair Edition · 不讲武德版</b><br>
-  <i>Cheat, steal, and have fun!</i>
+  <b>不讲武德版</b><br>
+  <i>来骗，来偷袭！</i>
 </p>
 
 <p align="center">
-  <a href="README_CN.md"><img src="https://img.shields.io/badge/🇨🇳-中文版-red?style=flat-square" alt="中文版"></a>
-  <img src="https://img.shields.io/github/license/ts-zx/silly-gomoku?style=flat-square&color=brightgreen" alt="License">
+  <a href="README_EN.md"><img src="https://img.shields.io/badge/🌐-English-blue?style=flat-square" alt="English"></a>
+  <img src="https://img.shields.io/github/license/ts-zx/silly-gomoku?style=flat-square" alt="License">
+  <img src="https://img.shields.io/github/last-commit/ts-zx/silly-gomoku?style=flat-square" alt="Last Commit">
+  <img src="https://img.shields.io/github/stars/ts-zx/silly-gomoku?style=flat-square&logo=github" alt="Stars">
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white" alt="HTML5">
   <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white" alt="CSS3">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript">
-  <img src="https://img.shields.io/badge/零依赖-纯前端-blue?style=flat-square" alt="Zero Dependencies">
-  <img src="https://img.shields.io/badge/沙雕指数-⭐⭐⭐⭐⭐-orange?style=flat-square" alt="Silliness Level">
+  <img src="https://img.shields.io/badge/零依赖-纯前端-44cc11?style=flat-square" alt="Zero Dependencies">
 </p>
 
 ---
 
-A **wacky, over-the-top Gomoku (Five-in-a-Row)** game that throws fairness out the window. Each player gets **6 ridiculous skills** (3 uses per game) to mess with the opponent. Curse their pieces, swap positions, erase moves — anything goes!
+**颠覆传统正经五子棋**，主打沙雕、无厘头、综艺喜剧效果！黑白双方各拥有 **6 个不讲武德的技能**，每局每人限用 **3 次**。诅咒对手的棋子、偷换位置、闪现连击……只有你想不到，没有这棋做不到的！
 
-### 🧙 Skills
+### 🧙 技能一览
 
-| Skill | Effect | Cooldown |
-|-------|--------|:--------:|
-| 🧙 Curse You! | Seal an opponent's piece for 3 turns (can't form five-in-a-row) | None |
-| 🧽 Erase! | Erase one of the opponent's pieces | 1 turn |
-| 🏃♂️ Stealth Swap | Teleport your piece to an empty cell | 1 turn |
-| ⚡ Double Strike | Place two pieces in one turn, skipping opponent's turn | 2 turns |
-| 🔄 I'll Take That! | Swap one opponent's piece with one of yours | 2 turns |
-| 💣 Force Move | Force opponent to place their next piece on a specific cell | 2 turns |
+| 技能 | 效果 | 冷却 |
+|------|------|:----:|
+| 🧙 画个圈圈诅咒你 | 封印对手一颗棋子 3 回合，不能参与五连判定 | 无 |
+| 🧽 我擦！我擦！ | 擦掉对手一颗已下的棋子 | 1 回合 |
+| 🏃♂️ 偷梁换柱 | 把自己的棋子瞬移到另一个空格 | 1 回合 |
+| ⚡ 闪现连击 | 本回合连下两子，跳对手一回合 | 2 回合 |
+| 🔄 你这棋我收了 | 选对手一颗棋子和自己一颗互换 | 2 回合 |
+| 💣 逼我就范 | 强迫对手下一步必须下在指定位置 | 2 回合 |
 
-> ⚡ Each player has **3 skill uses per game** — use them wisely!
+> ⚡ 每局每人技能总次数限制为 **3 次**，讲究策略使用！
 
-### 🕹️ How to Play
+### 🕹️ 操作说明
 
-1. Click the board to place your piece
-2. Click a skill button to select it
-3. Follow the prompt to pick a target on the board
-4. Right-click to cancel a skill selection
-5. "Undo" to revert last move, "Restart" for a new game
+1. 点击棋盘落子
+2. 点击技能按钮选择技能
+3. 根据提示在棋盘上选择目标位置/棋子
+4. 右键取消技能选择
+5. 「悔棋」撤销上一步，「重新开局」重置对局
 
-### 🛠️ Tech Stack
+### 🛠️ 技术栈
 
-**HTML5 + Canvas + CSS3 + Vanilla JS** — Zero dependencies, no backend, deploy anywhere!
+**HTML5 + Canvas + CSS3 + 原生 JavaScript** — 零依赖，无需后端，部署即玩！
 
-### 📄 License
+### 📄 许可证
 
-[MIT](LICENSE) — Free to use, modify, and share. Spread the silliness!
+[MIT](LICENSE) — 随便玩，随便改，沙雕传递靠大家！
 
 ---
 
 <p align="center">
-  <a href="README_CN.md"><img src="https://img.shields.io/badge/🇨🇳-阅读中文版-red?style=flat-square&size=large" alt="中文版"></a>
+  <a href="README_EN.md"><img src="https://img.shields.io/badge/🌐-Read in English-0077b6?style=flat-square" alt="English"></a>
 </p>
