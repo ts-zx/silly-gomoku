@@ -345,7 +345,7 @@ const SKILLS = [
   { id: 'double',  name: '⚡ 闪现连击',           desc: '本回合连下两子，跳对手一回合', target: 'none', cooldown: 2 },
   { id: 'swap',    name: '🔄 你这棋我收了',       desc: '选对手一颗棋子和自己一颗互换', target: 'opponent_piece', cooldown: 2, needsSecond: 'own_piece' },
   { id: 'force',   name: '💢 逼我就范',           desc: '指定对手下一步必须落子的位置', target: 'empty_cell', cooldown: 2 },
-  { id: 'confuse', name: '🌀 我眼花缭乱',         desc: '棋盘所有棋子随机洗牌！洗完后继续落子', target: 'none', cooldown: 3 },
+  { id: 'confuse', name: '🌀 我眼花缭乱',         desc: '棋盘所有棋子随机洗牌！自损八百', target: 'none', cooldown: 3 },
 ];
 
 const MAX_SKILLS = 3;
@@ -762,12 +762,10 @@ function executeSkill(skillId, targets) {
       }
     }
 
-    if (skillId === 'double' || skillId === 'confuse') {
-      // double: 连下两子，不切回合
-      // confuse: 洗牌后继续落子，不切回合
-      updateUI();
-    } else {
+    if (skillId !== 'double') {
       switchTurn();
+    } else {
+      updateUI();
     }
     return true;
   }
@@ -941,7 +939,7 @@ document.getElementById('undoBtn').onclick = () => {
     board[last.r][last.c] = null;
     blockedCells = blockedCells.filter(b => !(b.r===last.r && b.c===last.c));
   }
-  // 撤回2步后回到当前玩家落子前的状态，不切换回合
+  currentPlayer = currentPlayer === 1 ? 2 : 1;
   lastMove = moveHistory.length>0 ? moveHistory[moveHistory.length-1] : null;
   forceMoveTarget = null;
   drawBoard();
